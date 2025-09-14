@@ -8,15 +8,37 @@ import {
   Group,
   Checkbox,
   ActionIcon,
+  Badge,
 } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import AddTaskModal from "../components/AddTaskModal";
 import { useTaskStore } from "../store/TaskItemStore";
+
 export default function HomePage() {
-  const { tasks, addTask, toggleTask, removeTask } = useTaskStore();
+  const { tasks, addTask, toggleTask, removeTask, setTasks } = useTaskStore();
   const [modalOpened, setModalOpened] = useState(false);
+
+  const [isfirstload, setfirstload] = useState(true);
+
+  useEffect(() => {
+    if (isfirstload) {
+      setfirstload(false);
+      return;
+    }
+    const savetasks = JSON.stringify(tasks);
+    localStorage.setItem("task", savetasks);
+  }, [tasks]);
+
+  useEffect(() => {
+    const loadTasks = localStorage.getItem("task");
+    if (loadTasks === null) {
+      return;
+    }
+
+    setTasks(JSON.parse(loadTasks));
+  }, []);
 
   return (
     <Container size="lg" py="lg">
@@ -26,21 +48,24 @@ export default function HomePage() {
           All : {tasks.length} | Done :
           {tasks.filter((t: any) => t.isDone).length}
         </Text>
-        {/* Button เรียกใช้งาน Modal*/}
         <Button onClick={() => setModalOpened(true)}>Add Task</Button>
-        {/* แสดง Modal */}
         <AddTaskModal
           opened={modalOpened}
           onClose={() => setModalOpened(false)}
           onAdd={addTask}
         />
-        {/* แสดง Task Cards */}
         <Stack w="100%">
           {tasks.map((task) => (
             <Card withBorder shadow="sm" radius="md" mb="sm" key={task.id}>
               <Group justify="space-between" align="flex-start">
                 <Stack>
-                  {/* เพิ่ม assignees ตรงนี้*/}
+                  <Group>
+                    {task.Assignees.map((assignee) => (
+                      <Badge variant="light" color="blue" size="sm">
+                        {assignee}
+                      </Badge>
+                    ))}
+                  </Group>
                   <Text
                     fw={600}
                     td={task.isDone ? "line-through" : "none"}

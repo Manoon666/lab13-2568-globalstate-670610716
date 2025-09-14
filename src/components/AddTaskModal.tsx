@@ -11,12 +11,17 @@ import {
   Text,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
-import { useTaskFormStore } from "../store/TaskFormStore";
+import { useTaskFormStore } from "../store/TaskFromStore1";
 
 interface AddTaskModalProps {
   opened: boolean;
   onClose: () => void;
-  onAdd: (title: string, description: string, dueDate: string | null) => void;
+  onAdd: (
+    title: string,
+    description: string,
+    dueDate: string | null,
+    Assignees: string[]
+  ) => void;
 }
 const usersData: Record<string, { image: string; email: string }> = {
   "Emily Johnson": {
@@ -45,7 +50,19 @@ const usersData: Record<string, { image: string; email: string }> = {
     email: "mason_musician@gmail.com",
   },
 };
-
+const renderMultiSelectOption: MultiSelectProps["renderOption"] = ({
+  option,
+}) => (
+  <Group gap="sm">
+    <Avatar src={usersData[option.value].image} size={36} radius="xl" />
+    <div>
+      <Text size="sm">{option.value}</Text>
+      <Text size="xs" opacity={0.5}>
+        {usersData[option.value].email}
+      </Text>
+    </div>
+  </Group>
+);
 export default function AddTaskModal({
   opened,
   onClose,
@@ -55,18 +72,27 @@ export default function AddTaskModal({
     title,
     description,
     dueDate,
+    Assignees,
     setTitle,
     setDescription,
     setDueDate,
     resetForm,
+    setAssignees,
   } = useTaskFormStore();
   const handleAdd = () => {
-    if (!title.trim() || !description.trim() || !dueDate) return;
-    onAdd(title, description, dueDate);
+    if (!title.trim() || !description.trim() || !dueDate || !Assignees[0]?.trim)
+      return;
+    onAdd(title, description, dueDate, Assignees);
     onClose();
     resetForm();
   };
-
+  const assigneeList = [
+    "Emily Johnson",
+    "Ava Rodriguez",
+    "Olivia Chen",
+    "Ethan Barnes",
+    "Mason Taylor",
+  ];
   return (
     <Modal opened={opened} onClose={onClose} title="Add Task">
       <Stack>
@@ -93,7 +119,18 @@ export default function AddTaskModal({
           onChange={(date) => setDueDate(date ? date : null)}
           error={!dueDate?.trim() ? "Due Date is required" : false}
         />
-        {/* เพิ่ม MultiSelect ตรงนี้*/}
+        <MultiSelect
+          label="Assignees"
+          placeholder="Search for Assignees"
+          data={assigneeList}
+          hidePickedOptions
+          renderOption={renderMultiSelectOption}
+          value={Assignees}
+          onChange={setAssignees}
+          searchable
+          clearable
+          error={!Assignees[0]?.trim && "Assignees is required"}
+        />
         <Button onClick={handleAdd}>Save</Button>
       </Stack>
     </Modal>
